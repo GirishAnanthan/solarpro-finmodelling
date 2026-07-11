@@ -6,12 +6,13 @@ from config import RTL_LANGUAGES
 
 TRANSLATIONS: dict[str, dict[str, str]] = {
     # ── Navigation ──────────────────────────────────────────────────────────
-    "nav_ingestion":    {"en":"🔋 Project Ingestion","hi":"🔋 परियोजना अंतर्ग्रहण","gu":"🔋 પ્રોજેક્ટ ઇન્ટેક","zh":"🔋 项目导入","ar":"🔋 استيعاب المشروع","de":"🔋 Projektaufnahme","es":"🔋 Ingesta de Proyecto","el":"🔋 Εισαγωγή Έργου","la":"🔋 Ingestio Projecti"},
-    "nav_financial":    {"en":"💰 Financial Engine","hi":"💰 वित्तीय इंजन","gu":"💰 નાણાકીય એન્જિન","zh":"💰 财务引擎","ar":"💰 المحرك المالي","de":"💰 Finanz-Engine","es":"💰 Motor Financiero","el":"💰 Χρηματοοικονομική Μηχανή","la":"💰 Machina Pecuniaria"},
-    "nav_performance":  {"en":"📊 Performance","hi":"📊 प्रदर्शन","gu":"📊 કામગીરી","zh":"📊 性能分析","ar":"📊 الأداء","de":"📊 Leistung","es":"📊 Rendimiento","el":"📊 Απόδοση","la":"📊 Effectus"},
-    "nav_compliance":   {"en":"✅ Compliance","hi":"✅ अनुपालन","gu":"✅ અનુપાલન","zh":"✅ 合规检查","ar":"✅ الامتثال","de":"✅ Compliance","es":"✅ Cumplimiento","el":"✅ Συμμόρφωση","la":"✅ Conformitas"},
-    "nav_reports":      {"en":"📄 Reports & Billing","hi":"📄 रिपोर्ट और बिलिंग","gu":"📄 અહેવાલ અને બિલિંગ","zh":"📄 报告与账单","ar":"📄 التقارير والفواتير","de":"📄 Berichte & Abrechnung","es":"📄 Informes y Facturación","el":"📄 Αναφορές & Χρέωση","la":"📄 Relationes et Ratio"},
-    "nav_datasheet":    {"en":"📋 Module Compare","hi":"📋 मॉड्यूल तुलना","gu":"📋 મોડ્યુલ સરખામણી","zh":"📋 组件对比","ar":"📋 مقارنة الألواح","de":"📋 Modulvergleich","es":"📋 Comparar Módulos","el":"📋 Σύγκριση Πάνελ","la":"📋 Comparatio Modulorum"},
+    "nav_customer_project": {"en":"👤 Customer & Project","hi":"👤 ग्राहक और परियोजना","gu":"👤 ગ્રાહક અને પ્રોજેક્ટ","zh":"👤 客户与项目","ar":"👤 العميل والمشروع","de":"👤 Kunde & Projekt","es":"👤 Cliente y Proyecto","el":"👤 Πελάτης & Έργο","la":"👤 Cliens et Projectum"},
+    "nav_financial_inputs":{"en":"💳 Financial Inputs","hi":"💳 वित्तीय इनपुट","gu":"💳 નાણાકીય ઇનપુટ્સ","zh":"💳 财务输入","ar":"💳 المدخلات المالية","de":"💳 Finanzielle Eingaben","es":"💳 Entradas Financieras","el":"💳 Χρηματοοικονομικές Είσοδοι","la":"💳 Initia Pecuniaria"},
+    "nav_module_compare":  {"en":"📋 Module Compare","hi":"📋 मॉड्यूल तुलना","gu":"📋 મોડ્યુલ સરખામણી","zh":"📋 组件对比","ar":"📋 مقارنة الألواح","de":"📋 Modulvergleich","es":"📋 Comparar Módulos","el":"📋 Σύγκριση Πάνελ","la":"📋 Comparatio Modulorum"},
+    "nav_generate_report": {"en":"📊 Generate Report","hi":"📊 रिपोर्ट बनाएं","gu":"📊 રિપોર્ટ બનાવો","zh":"📊 生成报告","ar":"📊 إنشاء تقرير","de":"📊 Bericht erstellen","es":"📊 Generar Informe","el":"📊 Δημιουργία Αναφοράς","la":"📊 Relatio Creare"},
+    "nav_performance":     {"en":"📊 Performance","hi":"📊 प्रदर्शन","gu":"📊 કામગીરી","zh":"📊 性能分析","ar":"📊 الأداء","de":"📊 Leistung","es":"📊 Rendimiento","el":"📊 Απόδοση","la":"📊 Effectus"},
+    "nav_compliance":      {"en":"✅ Compliance","hi":"✅ अनुपालन","gu":"✅ અનુપાલન","zh":"✅ 合规检查","ar":"✅ الامتثال","de":"✅ Compliance","es":"✅ Cumplimiento","el":"✅ Συμμόρφωση","la":"✅ Conformitas"},
+    "nav_reports":         {"en":"📄 Reports & Billing","hi":"📄 रिपोर्ट और बिलिंग","gu":"📄 અહેવાલ અને બિલિંગ","zh":"📄 报告与账单","ar":"📄 التقارير والفواتير","de":"📄 Berichte & Abrechnung","es":"📄 Informes y Facturación","el":"📄 Αναφορές & Χρέωση","la":"📄 Relationes et Ratio"},
     # ── App Shell ───────────────────────────────────────────────────────────
     "app_tagline":      {"en":"Ground-Mounted Solar Financial Intelligence","hi":"ग्राउंड-माउंटेड सोलर वित्तीय विश्लेषण","gu":"ગ્રાઉન્ડ-માઉન્ટેડ સોલર ફાઇનાન્શિયલ ઇન્ટેલિજન્સ","zh":"地面光伏财务智能平台","ar":"ذكاء مالي للطاقة الشمسية الأرضية","de":"Boden-Solaranlage Finanzintelligenz","es":"Inteligencia Financiera Solar en Suelo","el":"Χρηματοοικονομική Ανάλυση Ηλιακής Ενέργειας","la":"Intelligentia Pecuniaria Solis Terrestris"},
     "language_label":   {"en":"Language","hi":"भाषा","gu":"ભાષા","zh":"语言","ar":"اللغة","de":"Sprache","es":"Idioma","el":"Γλώσσα","la":"Lingua"},
@@ -57,6 +58,14 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
     "compare_btn":      {"en":"Compare Modules","hi":"मॉड्यूल तुलना करें","gu":"મોડ્યુલ સરખામણી કરો","zh":"对比组件","ar":"مقارنة الألواح","de":"Module vergleichen","es":"Comparar Módulos","el":"Σύγκριση Πάνελ","la":"Confer Modulos"},
     "ranking":          {"en":"Module Ranking","hi":"मॉड्यूल रैंकिंग","gu":"મોડ્યુલ રેન્કિંગ","zh":"组件排名","ar":"ترتيب الألواح","de":"Modul-Ranking","es":"Ranking de Módulos","el":"Κατάταξη Πάνελ","la":"Ordo Modulorum"},
     "radar_chart":      {"en":"Radar Comparison","hi":"रडार तुलना","gu":"રડાર સરખામણી","zh":"雷达对比图","ar":"مقارنة الرادار","de":"Radar-Vergleich","es":"Comparación Radar","el":"Σύγκριση Ραντάρ","la":"Comparatio Radar"},
+    # ── Weightage ────────────────────────────────────────────────────────────
+    "weightage_title":  {"en":"Parameter Weightage for Module Scoring","hi":"मॉड्यूल स्कोरिंग के लिए पैरामीटर वेटेज","gu":"મોડ્યુલ સ્કોરિંગ માટે પેરામિટર વેટેજ","zh":"模块评分参数权重","ar":"أوزان المعايير لتقييم الألواح","de":"Gewichtung der Parameter für Modul-Bewertung","es":"Ponderación de Parámetros para Puntuación de Módulos","el":"Βάρος Παραμέτρων για Βαθμολογία Πάνελ","la":"Ponderatio Parametrorum pro Scoring Modulorum"},
+    "max_power":        {"en":"Max Power (Wp)","hi":"अधिकतम पावर (Wp)","gu":"મહત્તમ પાવર (Wp)","zh":"最大功率 (Wp)","ar":"الطاقة القصوى (Wp)","de":"Max. Leistung (Wp)","es":"Potencia Máx. (Wp)","el":"Μέγ. Ισχύς (Wp)","la":"Maxima Potestas (Wp)"},
+    "efficiency":       {"en":"Efficiency (%)","hi":"दक्षता (%)","gu":"ક્ષમતા (%)","zh":"效率 (%)","ar":"الكفاءة (%)","de":"Wirkungsgrad (%)","es":"Eficiencia (%)","el":"Απόδοση (%)","la":"Efficientia (%)"},
+    "temp_coeff":       {"en":"Temp Coefficient","hi":"तापमान गुणांक","gu":"તાપમાન ગુણાકર","zh":"温度系数","ar":"معامل الحرارة","de":"Temperaturkoeffizient","es":"Coef. Temperatura","el":"Συντελεστής Θερμ.","la":"Coefficients Temperaturs"},
+    "warranty":         {"en":"Warranty (yrs)","hi":"वारंटी (वर्ष)","gu":"વોરંટી (વર્ષ)","zh":"质保 (年)","ar":"الضمان (سنوات)","de":"Garantie (Jahre)","es":"Garantía (años)","el":"Εγγύηση (έτη)","la":"Garantia (Anni)"},
+    "vmp":              {"en":"Vmp (V)","hi":"Vmp (V)","gu":"Vmp (V)","zh":"Vmp (V)","ar":"Vmp (V)","de":"Vmp (V)","es":"Vmp (V)","el":"Vmp (V)","la":"Vmp (V)"},
+    "degradation":      {"en":"Degradation (%/yr)","hi":"अवक्रमण (%/वर्ष)","gu":"અધઃપતન (%/વર્ષ)","zh":"衰减率 (%/年)","ar":"التدهور (%/سنه)","de":"Degradation (%/Jahr)","es":"Degradación (%/año)","el":"Απόβληση (%/έτος)","la":"Degradatio (%/Annum)"},
 }
 
 
