@@ -127,9 +127,45 @@ with tab1:
 
     st.markdown("---")
 
+    # ── Location Search (with live suggestions) ────────────────────────────────
+    p = st.session_state.project or DEFAULT_PROJECT.copy()
+
+    def _on_loc_change():
+        q = st.session_state.loc_query.strip()
+        if len(q) >= 3:
+            st.session_state.geo_results = search_location(q)
+        else:
+            st.session_state.geo_results = []
+
+    def _on_geo_select():
+        idx = st.session_state.geo_sel
+        results = st.session_state.get("geo_results", [])
+        if 0 <= idx < len(results):
+            chosen = results[idx]
+            st.session_state["loc_lat"] = chosen["lat"]
+            st.session_state["loc_lon"] = chosen["lon"]
+            st.session_state["loc_display"] = chosen["display_name"]
+
+    st.markdown("### 2. Site Location")
+    loc_query = st.text_input("Search location",
+        key="loc_query", on_change=_on_loc_change,
+        placeholder="Type a location (min 3 chars), then press Enter...",
+        help="Type a city/site name, press Enter, then select from the suggestions below")
+
+    geo_results = st.session_state.get("geo_results", [])
+    if geo_results:
+        loc_labels = [f"{r['display_name'][:90]}  ({r['lat']:.4f}, {r['lon']:.4f})" for r in geo_results]
+        sel_idx = st.selectbox("Suggestions", range(len(loc_labels)),
+            format_func=lambda i: loc_labels[i],
+            key="geo_sel", on_change=_on_geo_select,
+            label_visibility="collapsed")
+
+    loc_lat = st.session_state.get("loc_lat")
+    loc_lon = st.session_state.get("loc_lon")
+    loc_display = st.session_state.get("loc_display", "")
+
     # ── Project Form ───────────────────────────────────────────────────────────
     with st.form("project_form", clear_on_submit=False, border=False):
-        p = st.session_state.project or DEFAULT_PROJECT.copy()
         form_vals = {}
         st.markdown("### 1. Customer & Project")
         c1, c2 = st.columns(2)
@@ -140,29 +176,14 @@ with tab1:
             form_vals["project_name"] = st.text_input("Project Name",
                 value=p.get("project_name", ""), placeholder="e.g. Rajkot Solar Phase 1")
 
-        st.markdown("### 2. Site Location")
-        loc_search = st.text_input("Search Location",
-            value=p.get("location", ""),
-            placeholder="Enter city, district, or site address...",
-            help="Type a location then click Search to auto-fill coordinates")
-        search_clicked = st.form_submit_button("🔍 Search Location")
-        if search_clicked and loc_search.strip():
-            results = search_location(loc_search.strip())
-            if results:
-                st.session_state.geo_results = results
-            else:
-                st.warning("No results found. Enter coordinates manually.")
-
-        geo_results = st.session_state.get("geo_results", [])
-        if geo_results:
-            loc_labels = [f"{r['display_name'][:80]}  ({r['lat']:.4f}, {r['lon']:.4f})" for r in geo_results]
-            sel_idx = st.selectbox("Select result", range(len(loc_labels)),
-                format_func=lambda i: loc_labels[i], key="geo_sel")
-            chosen = geo_results[sel_idx]
-            form_vals["location"] = chosen["display_name"]
-            form_vals["latitude"] = chosen["lat"]
-            form_vals["longitude"] = chosen["lon"]
+        # Show selected location, fall back to manual lat/lon entry
+        if loc_lat is not None:
+            st.success(f"📍 {loc_display[:80]}")
+            form_vals["location"] = loc_display
+            form_vals["latitude"] = loc_lat
+            form_vals["longitude"] = loc_lon
         else:
+            form_vals["location"] = p.get("location", "")
             loc2, loc3 = st.columns(2)
             with loc2:
                 form_vals["latitude"] = st.text_input("Latitude",
@@ -172,7 +193,6 @@ with tab1:
                 form_vals["longitude"] = st.text_input("Longitude",
                     value=str(p.get("longitude", "")) if p.get("longitude") else "",
                     placeholder="e.g. 70.8022")
-            form_vals["location"] = loc_search or p.get("location", "")
 
         st.markdown("### 3. Plant Parameters")
         pc1, pc2, pc3 = st.columns(3)
