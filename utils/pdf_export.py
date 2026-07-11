@@ -33,10 +33,21 @@ def _reshape_arabic(text: str) -> str:
         return text
 
 
+def _ascii_safe(text: str) -> str:
+    replacements = {
+        "\u2014": "-", "\u2013": "-", "\u2018": "'", "\u2019": "'",
+        "\u201c": '"', "\u201d": '"', "\u2026": "...", "\u00a0": " ",
+        "\u20b9": "Rs.", "\u20a8": "Rs.", "\u00a3": "GBP", "\u20ac": "EUR",
+    }
+    for old, new in replacements.items():
+        text = text.replace(old, new)
+    return text
+
+
 def _safe_text(text: str, lang: str) -> str:
     if lang == "ar":
         return _reshape_arabic(str(text))
-    return str(text)
+    return _ascii_safe(str(text))
 
 
 class SolarReport(FPDF):
@@ -71,7 +82,7 @@ class SolarReport(FPDF):
         self.rect(0, 283, 210, 14, "F")
         self.set_font("Helvetica", "I", 8)
         self.set_text_color(*C_MUTED)
-        self.cell(0, 10, f"Page {self.page_no()} | Confidential — {APP_NAME}", align="C")
+        self.cell(0, 10, _safe_text(f"Page {self.page_no()} | Confidential - {APP_NAME}", self.lang), align="C")
 
     # ── Helpers ───────────────────────────────────────────────────────────────
     def _h1(self, text: str):

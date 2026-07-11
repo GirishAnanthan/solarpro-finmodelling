@@ -26,6 +26,8 @@ from utils.compliance import (CHECKLIST, STATUS_OPTIONS, STATUS_EMOJI,
                                overall_progress, export_checklist_csv)
 from utils.billing import create_checkout_session, get_plan_features, is_demo_mode
 from utils.pdf_export import generate_report
+from utils.datasheet import (parse_csv_excel, parse_pdf, build_sample_excel as ds_sample_excel,
+                             compute_ranking, plot_radar, plot_parameter_bars)
 
 # ── Page Config ───────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -84,10 +86,10 @@ rtl_div  = f'<div class="{get_rtl_class(lang)}">' if is_rtl(lang) else ""
 rtl_end  = "</div>" if is_rtl(lang) else ""
 
 # ── Tab Navigation ────────────────────────────────────────────────────────────
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     t("nav_ingestion",  lang), t("nav_financial", lang),
     t("nav_performance",lang), t("nav_compliance",lang),
-    t("nav_reports",    lang),
+    t("nav_reports",    lang), t("nav_datasheet", lang),
 ])
 
 # ═══════════════════════════════════════════════════════════════════════════════

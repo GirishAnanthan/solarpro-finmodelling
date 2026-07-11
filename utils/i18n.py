@@ -11,6 +11,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
     "nav_performance":  {"en":"📊 Performance","hi":"📊 प्रदर्शन","gu":"📊 કામગીરી","zh":"📊 性能分析","ar":"📊 الأداء","de":"📊 Leistung","es":"📊 Rendimiento","el":"📊 Απόδοση","la":"📊 Effectus"},
     "nav_compliance":   {"en":"✅ Compliance","hi":"✅ अनुपालन","gu":"✅ અનુપાલન","zh":"✅ 合规检查","ar":"✅ الامتثال","de":"✅ Compliance","es":"✅ Cumplimiento","el":"✅ Συμμόρφωση","la":"✅ Conformitas"},
     "nav_reports":      {"en":"📄 Reports & Billing","hi":"📄 रिपोर्ट और बिलिंग","gu":"📄 અહેવાલ અને બિલિંગ","zh":"📄 报告与账单","ar":"📄 التقارير والفواتير","de":"📄 Berichte & Abrechnung","es":"📄 Informes y Facturación","el":"📄 Αναφορές & Χρέωση","la":"📄 Relationes et Ratio"},
+    "nav_datasheet":    {"en":"📋 Module Compare","hi":"📋 मॉड्यूल तुलना","gu":"📋 મોડ્યુલ સરખામણી","zh":"📋 组件对比","ar":"📋 مقارنة الألواح","de":"📋 Modulvergleich","es":"📋 Comparar Módulos","el":"📋 Σύγκριση Πάνελ","la":"📋 Comparatio Modulorum"},
     # ── App Shell ───────────────────────────────────────────────────────────
     "app_tagline":      {"en":"Ground-Mounted Solar Financial Intelligence","hi":"ग्राउंड-माउंटेड सोलर वित्तीय विश्लेषण","gu":"ગ્રાઉન્ડ-માઉન્ટેડ સોલર ફાઇનાન્શિયલ ઇન્ટેલિજન્સ","zh":"地面光伏财务智能平台","ar":"ذكاء مالي للطاقة الشمسية الأرضية","de":"Boden-Solaranlage Finanzintelligenz","es":"Inteligencia Financiera Solar en Suelo","el":"Χρηματοοικονομική Ανάλυση Ηλιακής Ενέργειας","la":"Intelligentia Pecuniaria Solis Terrestris"},
     "language_label":   {"en":"Language","hi":"भाषा","gu":"ભાષા","zh":"语言","ar":"اللغة","de":"Sprache","es":"Idioma","el":"Γλώσσα","la":"Lingua"},
@@ -51,6 +52,11 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
     "assumptions":      {"en":"Assumptions","hi":"मान्यताएँ","gu":"ધારણાઓ","zh":"假设条件","ar":"الافتراضات","de":"Annahmen","es":"Supuestos","el":"Παραδοχές","la":"Praesumptiones"},
     "generation":       {"en":"Generation (kWh)","hi":"उत्पादन (kWh)","gu":"ઉત્પાદન (kWh)","zh":"发电量 (kWh)","ar":"الإنتاج (kWh)","de":"Erzeugung (kWh)","es":"Generación (kWh)","el":"Παραγωγή (kWh)","la":"Generatio (kWh)"},
     "degradation":      {"en":"Degradation (%)","hi":"अवक्रमण (%)","gu":"અધઃપતન (%)","zh":"衰减率 (%)","ar":"التدهور (%)","de":"Degradation (%)","es":"Degradación (%)","el":"Υποβάθμιση (%)","la":"Degradatio (%)"},
+    # ── Datasheet ──────────────────────────────────────────────────────────
+    "upload_datasheet": {"en":"Upload Module Datasheets (CSV/XLSX/PDF)","hi":"मॉड्यूल डेटाशीट अपलोड करें","gu":"મોડ્યુલ ડેટાશીટ અપલોડ કરો","zh":"上传组件规格书","ar":"رفع صحائف بيانات الألواح","de":"Moduldatenblätter hochladen","es":"Subir Fichas de Módulos","el":"Ανέβασμα Φύλλων Δεδομένων","la":"Elige Tabulas Modulorum"},
+    "compare_btn":      {"en":"Compare Modules","hi":"मॉड्यूल तुलना करें","gu":"મોડ્યુલ સરખામણી કરો","zh":"对比组件","ar":"مقارنة الألواح","de":"Module vergleichen","es":"Comparar Módulos","el":"Σύγκριση Πάνελ","la":"Confer Modulos"},
+    "ranking":          {"en":"Module Ranking","hi":"मॉड्यूल रैंकिंग","gu":"મોડ્યુલ રેન્કિંગ","zh":"组件排名","ar":"ترتيب الألواح","de":"Modul-Ranking","es":"Ranking de Módulos","el":"Κατάταξη Πάνελ","la":"Ordo Modulorum"},
+    "radar_chart":      {"en":"Radar Comparison","hi":"रडार तुलना","gu":"રડાર સરખામણી","zh":"雷达对比图","ar":"مقارنة الرادار","de":"Radar-Vergleich","es":"Comparación Radar","el":"Σύγκριση Ραντάρ","la":"Comparatio Radar"},
 }
 
 
