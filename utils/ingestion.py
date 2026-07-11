@@ -1,10 +1,10 @@
-"""
-SolarPro — AutoLISP JSON Ingestion Module
-Parses and validates JSON files exported from AutoLISP/SolarPro CAD.
+"""SolarPro — Project Ingestion Module
+Parses AutoLISP JSON and provides form-based project builder.
 """
 import json
 from pathlib import Path
 from typing import Any
+from config import DEFAULT_PROJECT
 
 REQUIRED_FIELDS: dict[str, type] = {
     "dc_capacity_kwp": (int, float),
@@ -24,6 +24,37 @@ OPTIONAL_FIELDS: dict[str, Any] = {
 }
 
 
+def _to_float(v) -> float:
+    try:
+        return float(v)
+    except (ValueError, TypeError):
+        return 0.0
+
+
+def build_project_from_form(form: dict) -> dict:
+    """Build a project dict from form inputs, computing derived fields."""
+    proj = DEFAULT_PROJECT.copy()
+    for k, v in form.items():
+        if v is not None and v != "":
+            proj[k] = v
+    dc_mw = _to_float(form.get("dc_capacity_mw", 0))
+    ac_mw = _to_float(form.get("ac_capacity_mw", 0))
+    proj["dc_capacity_mw"] = dc_mw
+    proj["ac_capacity_mw"] = ac_mw
+    proj["dc_capacity_kwp"] = dc_mw * 1000
+    proj["dc_ac_ratio"] = round(dc_mw / ac_mw, 3) if ac_mw > 0 else 0.0
+    module_w = _to_float(form.get("module_watt", 0))
+    if module_w > 0 and proj["dc_capacity_kwp"] > 0:
+        proj["module_count"] = int(round(proj["dc_capacity_kwp"] * 1000 / module_w))
+    for lat_field in ("latitude", "longitude"):
+        if isinstance(proj.get(lat_field), str):
+            try:
+                proj[lat_field] = float(proj[lat_field])
+            except (ValueError, TypeError):
+                proj[lat_field] = None
+    return proj
+
+
 def parse_autolisp_json(file_obj) -> dict:
     """
     Parse an AutoLISP-exported JSON file object (or path).
@@ -36,18 +67,15 @@ def parse_autolisp_json(file_obj) -> dict:
     else:
         raw = json.load(file_obj)
 
-    # Normalise keys to lowercase
     data = {k.lower(): v for k, v in raw.items()}
 
     valid, errors = validate_project_data(data)
     if not valid:
         raise ValueError(f"Invalid project JSON: {'; '.join(errors)}")
 
-    # Fill optional fields with defaults
     for field, default in OPTIONAL_FIELDS.items():
         data.setdefault(field, default)
 
-    # Derived fields
     if data.get("module_watt") is None and data["module_count"] > 0:
         data["module_watt"] = round(data["dc_capacity_kwp"] * 1000 / data["module_count"], 1)
 
@@ -55,7 +83,10 @@ def parse_autolisp_json(file_obj) -> dict:
     data["module_count"]    = int(data["module_count"])
     data["tilt"]            = float(data["tilt"])
 
-    return data
+    proj = DEFAULT_PROJECT.copy()
+    proj.update(data)
+    proj["dc_capacity_mw"] = proj["dc_capacity_kwp"] / 1000
+    return proj
 
 
 def validate_project_data(data: dict) -> tuple[bool, list[str]]:
@@ -79,16 +110,27 @@ def validate_project_data(data: dict) -> tuple[bool, list[str]]:
 def build_sample_json() -> dict:
     """Return a sample project dict for demo purposes."""
     return {
-        "project_name":    "Rajkot Solar Phase 1",
-        "location":        "Gujarat, India",
-        "dc_capacity_kwp": 2500.0,
-        "module_count":    5952,
-        "tilt":            25,
-        "gcr":             0.40,
-        "module_watt":     420,
-        "latitude":        22.3039,
-        "longitude":       70.8022,
-        "notes":           "Ground-mounted fixed-tilt, mono PERC modules",
+        "customer_name":     "Gujarat Solar Development Corp",
+        "project_name":      "Rajkot Solar Phase 1",
+        "location":          "Rajkot, Gujarat, India",
+        "latitude":          22.3039,
+        "longitude":         70.8022,
+        "ac_capacity_mw":    2.0,
+        "dc_capacity_mw":    2.5,
+        "dc_capacity_kwp":   2500.0,
+        "dc_ac_ratio":       1.25,
+        "mounting_structure":"Fixed Tilt",
+        "tilt":              25,
+        "azimuth":           180,
+        "gcr":               0.40,
+        "module_technology": "Mono PERC (p-type)",
+        "module_manufacturer": "Longi",
+        "module_model":      "HiMO7 LR7-72HGD 580W",
+        "module_watt":       420,
+        "module_count":      5952,
+        "specific_yield_estimate": 1550,
+        "estimated_tariff":  2.85,
+        "notes":             "Ground-mounted fixed-tilt, mono PERC modules",
     }
 
 
@@ -97,6 +139,6 @@ def summarise(data: dict) -> str:
     return (
         f"{data.get('project_name','Project')} | "
         f"{data['dc_capacity_kwp']:.0f} kWp | "
-        f"{data['module_count']:,} modules | "
-        f"{data['tilt']}° tilt"
+        f"{data.get('module_count', 0):,} modules | "
+        f"{data.get('mounting_structure', '—')}"
     )

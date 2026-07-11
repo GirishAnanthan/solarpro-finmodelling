@@ -67,6 +67,53 @@ STRIPE_PLANS: dict[str, dict] = {
     "enterprise": {"price_inr": 4_999,    "projects": -1,  "label": "Enterprise"},
 }
 
+# ── Mounting Structures ───────────────────────────────────────────────────────
+MOUNTING_STRUCTURES: list[str] = [
+    "Fixed Tilt",
+    "Single Axis Tracker (Horizontal)",
+    "Single Axis Tracker (Vertical)",
+    "Dual Axis Tracker",
+    "East-West (Tilted)",
+    "Carport",
+    "Floating Solar",
+]
+
+# ── Module Technologies ───────────────────────────────────────────────────────
+MODULE_TECHNOLOGIES: list[str] = [
+    "Mono PERC (p-type)",
+    "Mono PERC (n-type / TOPCon)",
+    "Bifacial Mono PERC",
+    "HJT (Heterojunction)",
+    "IBC (Interdigitated Back Contact)",
+    "Thin Film (CdTe)",
+    "Thin Film (CIGS)",
+]
+
+# ── Default Project Schema ────────────────────────────────────────────────────
+DEFAULT_PROJECT: dict = {
+    "customer_name": "",
+    "project_name": "",
+    "location": "",
+    "latitude": None,
+    "longitude": None,
+    "ac_capacity_mw": 0.0,
+    "dc_capacity_mw": 0.0,
+    "dc_capacity_kwp": 0.0,
+    "dc_ac_ratio": 0.0,
+    "mounting_structure": "Fixed Tilt",
+    "tilt": 25.0,
+    "azimuth": 180.0,
+    "gcr": 0.40,
+    "module_technology": "Mono PERC (p-type)",
+    "module_manufacturer": "",
+    "module_model": "",
+    "module_watt": 0.0,
+    "module_count": 0,
+    "specific_yield_estimate": 1550.0,
+    "estimated_tariff": 2.85,
+    "notes": "",
+}
+
 # ── Compliance Categories ─────────────────────────────────────────────────────
 COMPLIANCE_CATEGORIES = [
     "Nodal Agencies (SECI/MNRE)",
