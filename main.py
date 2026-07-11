@@ -249,7 +249,7 @@ with tab1:
 
         mw1, mw2 = st.columns(2)
         with mw1:
-            default_mw = float(p.get("module_watt", 0) or 0)
+            default_mw = int(p.get("module_watt", 0) or 0)
             form_vals["module_watt"] = st.number_input("Module Wattage (Wp)", 0, 1000,
                 value=default_mw if default_mw > 0 else 580, step=5)
         with mw2:
