@@ -2,6 +2,15 @@
 SolarPro — Financial Engine
 Computes 25-year cash flows, Equity IRR, Project IRR, LCOE, NPV, DSCR, Payback.
 Runs P50 / P75 / P90 sensitivity scenarios using numpy-financial.
+
+Modelling notes:
+- Taxable income = EBITDA − Depreciation − Interest, with loss carry-forward.
+- Depreciation: Straight Line (SLM, to 5% salvage over project life) or
+  Accelerated 40% Written-Down Value (WDV) as commonly used for Indian solar.
+- Project (unlevered) FCF uses unlevered tax (no interest tax shield).
+- Equity FCF = PAT + Depreciation (non-cash add-back) − Principal repaid.
+- DSCR = CFADS / Debt Service, where CFADS = EBITDA − cash tax.
+- LCOE = (CAPEX + PV of OPEX) / PV of Generation — financing-neutral.
 """
 from __future__ import annotations
 import numpy as np
@@ -16,13 +25,18 @@ from config import (
 
 YEARS = list(range(1, DEFAULT_PROJECT_LIFE + 1))
 
+SALVAGE_FRACTION = 0.05   # residual book value under SLM
+WDV_RATE         = 0.40   # accelerated depreciation rate (Indian IT Act, solar)
+
 # ── ToD Default Slot Definition ───────────────────────────────────────────────
-# Solar generation typically falls: ~80% in normal/shoulder, ~5% in peak (evening),
-# ~15% in off-peak (early morning). Adjust per project location / state SERC order.
+# Solar generation is concentrated in daylight hours. Defaults assume no storage:
+# ~90% in the normal daytime window, ~2% in the evening peak (18:00–22:00 has
+# almost no solar output), ~8% in early-morning hours before 08:00.
+# Adjust per project location / state SERC ToD order (or storage configuration).
 DEFAULT_TOD_SLOTS: dict[str, dict] = {
-    "Peak"      : {"hours": "18:00–22:00", "tariff_mult": 1.40, "gen_pct": 0.05},
-    "Normal"    : {"hours": "08:00–18:00", "tariff_mult": 1.00, "gen_pct": 0.80},
-    "Off-Peak"  : {"hours": "22:00–08:00", "tariff_mult": 0.75, "gen_pct": 0.15},
+    "Peak"      : {"hours": "18:00–22:00", "tariff_mult": 1.40, "gen_pct": 0.02},
+    "Normal"    : {"hours": "08:00–18:00", "tariff_mult": 1.00, "gen_pct": 0.90},
+    "Off-Peak"  : {"hours": "22:00–08:00", "tariff_mult": 0.75, "gen_pct": 0.08},
 }
 
 
@@ -39,6 +53,7 @@ def compute_blended_tariff(base_tariff: float, tod_slots: dict | None) -> float:
         for slot in tod_slots.values()
     )
     # Normalise in case gen_pct values don't sum to exactly 1.0
+    # (the UI warns the user when the shares are off-total).
     total_pct = sum(s["gen_pct"] for s in tod_slots.values())
     return blended / total_pct if total_pct > 0 else base_tariff
 
@@ -79,6 +94,36 @@ def _debt_schedule(capex: float, debt_fraction: float, interest_rate: float, ten
     return principal_repaid, interest_paid, outstanding
 
 
+def _depreciation_schedule(capex: float, method: str = "SLM") -> list[float]:
+    """
+    Annual book depreciation over project life.
+    SLM: straight line to SALVAGE_FRACTION residual value.
+    WDV: 40% written-down value (accelerated), floored at salvage value.
+    """
+    dep = []
+    if method == "WDV":
+        book = capex
+        floor = capex * SALVAGE_FRACTION
+        for _ in YEARS:
+            d = book * WDV_RATE
+            if book - d < floor:
+                d = max(book - floor, 0.0)
+            book -= d
+            dep.append(d)
+    else:  # SLM
+        annual = capex * (1 - SALVAGE_FRACTION) / len(YEARS)
+        dep = [annual] * len(YEARS)
+    return dep
+
+
+def _tax_with_loss_carryforward(taxable_income: float, loss_cf: float, tax_rate: float) -> tuple[float, float]:
+    """Apply accumulated losses against positive income. Returns (tax, new_loss_cf)."""
+    if taxable_income <= 0:
+        return 0.0, loss_cf + (-taxable_income)
+    offset = min(loss_cf, taxable_income)
+    return (taxable_income - offset) * tax_rate, loss_cf - offset
+
+
 def build_cashflows(
     dc_kwp:          float = 2500.0,
     specific_yield:  float = DEFAULT_SPECIFIC_YIELD_P50,
@@ -93,6 +138,7 @@ def build_cashflows(
     opex_escalation: float = DEFAULT_OPEX_ESCALATION,
     discount_rate:   float = DEFAULT_DISCOUNT_RATE,
     tod_slots:       dict | None = None,
+    depreciation_method: str = "SLM",
 ) -> pd.DataFrame:
     """Return a 25-row DataFrame with full annual cash flow model."""
     # Apply ToD blending to effective tariff
@@ -102,38 +148,51 @@ def build_cashflows(
 
     gen = _generation_profile(dc_kwp, specific_yield, p_factor)
     prin_repaid, int_paid, outstanding = _debt_schedule(capex, debt_fraction, interest_rate, loan_tenure)
+    dep = _depreciation_schedule(capex, depreciation_method)
 
     rows = []
+    loss_cf_lev = 0.0    # levered loss carry-forward (for equity cash flows)
+    loss_cf_unlev = 0.0  # unlevered loss carry-forward (for project cash flows)
     for i, yr in enumerate(YEARS):
         revenue = gen[i] * effective_tariff
         opex    = dc_kwp * opex_per_kwp * ((1 + opex_escalation) ** (yr - 1))
         ebitda  = revenue - opex
-        ebit    = ebitda - int_paid[i]
-        tax     = max(ebit * tax_rate, 0.0)
-        pat     = ebit - tax
-        # Project-level FCF (pre-financing)
-        project_fcf = ebitda - tax
-        # Equity FCF
-        equity_fcf = pat - prin_repaid[i]
-        # DSCR
-        dscr = ebitda / (prin_repaid[i] + int_paid[i]) if (prin_repaid[i] + int_paid[i]) > 0 else 99.0
+
+        # Levered tax: EBITDA − Depreciation − Interest, with loss carry-forward
+        pbt = ebitda - dep[i] - int_paid[i]
+        tax, loss_cf_lev = _tax_with_loss_carryforward(pbt, loss_cf_lev, tax_rate)
+        pat = pbt - tax
+
+        # Unlevered tax (no interest shield) for project-level FCF
+        pbt_unlev = ebitda - dep[i]
+        tax_unlev, loss_cf_unlev = _tax_with_loss_carryforward(pbt_unlev, loss_cf_unlev, tax_rate)
+
+        # Project-level FCF (pre-financing): depreciation is non-cash
+        project_fcf = ebitda - tax_unlev
+        # Equity FCF: add back non-cash depreciation, subtract principal repayment
+        equity_fcf = pat + dep[i] - prin_repaid[i]
+        # DSCR = CFADS / debt service (CFADS = EBITDA − cash tax)
+        debt_service = prin_repaid[i] + int_paid[i]
+        dscr = (ebitda - tax) / debt_service if debt_service > 0 else np.nan
         # Discounted equity FCF
         pv_factor = 1 / ((1 + discount_rate) ** yr)
         rows.append({
-            "Year":            yr,
-            "Generation_kWh":  round(gen[i], 0),
-            "Revenue_INR":     round(revenue, 0),
-            "OPEX_INR":        round(opex, 0),
-            "EBITDA_INR":      round(ebitda, 0),
-            "Interest_INR":    round(int_paid[i], 0),
-            "Tax_INR":         round(tax, 0),
-            "PAT_INR":         round(pat, 0),
-            "Debt_Repaid_INR": round(prin_repaid[i], 0),
-            "Equity_FCF_INR":  round(equity_fcf, 0),
-            "Project_FCF_INR": round(project_fcf, 0),
-            "DSCR":            round(dscr, 2),
-            "PV_Equity_FCF":   round(equity_fcf * pv_factor, 0),
-            "Debt_Outstanding":round(outstanding[i], 0),
+            "Year":             yr,
+            "Generation_kWh":   round(gen[i], 0),
+            "Revenue_INR":      round(revenue, 0),
+            "OPEX_INR":         round(opex, 0),
+            "EBITDA_INR":       round(ebitda, 0),
+            "Depreciation_INR": round(dep[i], 0),
+            "Interest_INR":     round(int_paid[i], 0),
+            "Tax_INR":          round(tax, 0),
+            "Tax_Unlevered_INR":round(tax_unlev, 0),
+            "PAT_INR":          round(pat, 0),
+            "Debt_Repaid_INR":  round(prin_repaid[i], 0),
+            "Equity_FCF_INR":   round(equity_fcf, 0),
+            "Project_FCF_INR":  round(project_fcf, 0),
+            "DSCR":             round(dscr, 2) if not np.isnan(dscr) else np.nan,
+            "PV_Equity_FCF":    round(equity_fcf * pv_factor, 0),
+            "Debt_Outstanding": round(outstanding[i], 0),
         })
     return pd.DataFrame(rows)
 
@@ -146,19 +205,21 @@ def compute_metrics(df: pd.DataFrame, capex: float, dc_kwp: float, debt_fraction
     equity_flows = [-equity] + df["Equity_FCF_INR"].tolist()
     eq_irr = npf.irr(equity_flows)
 
-    # Project IRR: initial outflow = total CAPEX, then project FCF
+    # Project IRR: initial outflow = total CAPEX, then unlevered project FCF
     project_flows = [-capex] + df["Project_FCF_INR"].tolist()
     proj_irr = npf.irr(project_flows)
 
     # NPV of equity cash flows
     npv_val = npf.npv(discount_rate, equity_flows)
 
-    # LCOE = Total PV of costs / Total PV of generation
-    total_pv_costs = capex  # year-0 capex
+    # LCOE = (CAPEX + PV of OPEX) / PV of Generation — financing-neutral.
+    # Debt principal/interest are excluded: they finance the CAPEX already
+    # counted at year 0 (including both would double-count 70% of CAPEX).
+    total_pv_costs = capex
     total_pv_gen   = 0.0
     for _, row in df.iterrows():
         pv = 1 / ((1 + discount_rate) ** row["Year"])
-        total_pv_costs += (row["OPEX_INR"] + row["Interest_INR"] + row["Tax_INR"] + row["Debt_Repaid_INR"]) * pv
+        total_pv_costs += row["OPEX_INR"] * pv
         total_pv_gen   += row["Generation_kWh"] * pv
     lcoe = total_pv_costs / total_pv_gen if total_pv_gen > 0 else 0.0
 
@@ -170,8 +231,10 @@ def compute_metrics(df: pd.DataFrame, capex: float, dc_kwp: float, debt_fraction
         if cumulative >= equity and payback_yr is None:
             payback_yr = row["Year"]
 
-    # Min DSCR
-    min_dscr = df["DSCR"].replace(99.0, np.nan).min()
+    # Min DSCR over years with actual debt service
+    min_dscr = df["DSCR"].min(skipna=True)
+    if pd.isna(min_dscr):
+        min_dscr = np.nan
 
     return {
         "equity_irr":   eq_irr,
@@ -199,6 +262,7 @@ def run_sensitivity(
     opex_escalation: float,
     discount_rate: float,
     tod_slots: dict | None = None,
+    depreciation_method: str = "SLM",
 ) -> dict[str, dict]:
     """Run P50, P75, P90 scenarios. Returns dict of {scenario: metrics}."""
     results = {}
@@ -209,6 +273,7 @@ def run_sensitivity(
             tariff=tariff, debt_fraction=debt_fraction, interest_rate=interest_rate,
             loan_tenure=loan_tenure, tax_rate=tax_rate, opex_escalation=opex_escalation,
             discount_rate=discount_rate, tod_slots=tod_slots,
+            depreciation_method=depreciation_method,
         )
         capex = dc_kwp * capex_per_kwp
         metrics = compute_metrics(df, capex, dc_kwp, debt_fraction, discount_rate)
